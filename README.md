@@ -22,11 +22,11 @@ flowchart LR
 
 
 ## Quick Start
-# Install dependencies
+### Install dependencies
 pip install -r requirements.txt
 
-# Run prototype
+### Run prototype
 python retrieval_demo/main.py
 
-# Example query
+### Example query
 Ask about the codebase: How is authentication handled?
