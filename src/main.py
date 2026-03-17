@@ -3,6 +3,7 @@ import faiss
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 import ollama
+import ast
 
 def create_embeddings(code_files):
 
@@ -59,6 +60,23 @@ def load_code_files(directory):
 
     return code_files
 
+def load_code_functions(directory):
+    functTrees = {}
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+
+            if file.endswith(".py"):
+
+                path = os.path.join(root, file)
+
+                with open(path, "r", encoding="utf-8") as f:
+                    code = f.read()
+                    functTrees[path] = ast.parse(code)
+
+    for t in functTrees.values(): 
+        for node in ast.walk(t):
+            if isinstance(node, ast.FunctionDef):
+                print(node.name)
 
 def explain_code(code, query):
 
@@ -102,19 +120,22 @@ def explain_code(code, query):
 
 if __name__ == "__main__":
 
-    code_files = load_code_files("corpus")
+    load_code_functions("corpus")
 
-    vectorizer, X = create_embeddings(code_files)
+    # code_files = load_code_files("corpus")
 
-    index = build_faiss_index(X)
 
-    query = input("Ask about the codebase: ")
+    # vectorizer, X = create_embeddings(code_files)
 
-    file_names, code = retrieve_code(query, vectorizer, index, code_files)
+    # index = build_faiss_index(X)
 
-    print("\nRetrieved files:", file_names)
+    # query = input("Ask about the codebase: ")
 
-    explanation = explain_code(code, query)
+    # file_names, code = retrieve_code(query, vectorizer, index, code_files)
 
-    print("\nExplanation:\n")
-    print(explanation)
+    # print("\nRetrieved files:", file_names)
+
+    # explanation = explain_code(code, query)
+
+    # print("\nExplanation:\n")
+    # print(explanation)
