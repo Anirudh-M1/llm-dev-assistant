@@ -1,20 +1,32 @@
-# LLM Dev Assistant
+# LLM-Powered Code Assistant
 
-A Retrieval-Augmented Generation (RAG) assistant for understanding codebases.
+**Interactive tool to query Python codebases and get LLM-powered explanations.**  
+Built to demonstrate retrieval + reasoning pipelines for developer workflows.
 
-## Features
+---
 
-- Code ingestion pipeline
-- TF-IDF embeddings
-- FAISS vector search
-- Llama3 explanation via Ollama
+## Demo
 
-## Architecture
+![Demo GIF](assets/demo.gif)  <!-- Replace with actual GIF or screenshot -->
+*Type a query about your codebase → retrieves relevant snippets → LLM explains.*
 
-User Query  
-↓  
-Vector Embedding (TF-IDF)  
-↓  
-FAISS Retrieval  
-↓  
-LLM Explanation
+---
+
+## How It Works
+
+
+flowchart LR
+    A[Python Corpus] --> B[Embeddings + FAISS Index]
+    B --> C[Top-k Retrieval]
+    C --> D[LLM Explanation]
+
+
+## Quick Start
+### Install dependencies
+pip install -r requirements.txt
+
+### Run prototype
+python retrieval_demo/main.py
+
+### Example query
+Ask about the codebase: How is authentication handled?
