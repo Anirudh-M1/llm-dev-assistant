@@ -2,8 +2,10 @@ import os
 import faiss
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sentence_transformers import SentenceTransformer
 import ollama
 import ast
+import numpy as np
 
 def create_embeddings(code_files):
 
@@ -80,10 +82,17 @@ def load_code_functions(directory):
                 lines = c.splitlines()
                 functions.append([node.name, "\n".join(lines[node.lineno - 1: node.end_lineno])])
         
-                
     for n,c in functions:
         print(f"**Name: {n}")
         print(f"**Code:\n {c} \n")
+
+    return functions
+
+def create_embeddings(functions): 
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    funcCode = [c for _, c in functions]
+    embeddings = model.encode(funcCode)
+    print(embeddings)
 
 def explain_code(code, query):
 
@@ -127,7 +136,9 @@ def explain_code(code, query):
 
 if __name__ == "__main__":
 
-    load_code_functions("corpus")
+    funct = load_code_functions("corpus")
+
+    create_embeddings(funct)
 
     # code_files = load_code_files("corpus")
 
