@@ -71,12 +71,19 @@ def load_code_functions(directory):
 
                 with open(path, "r", encoding="utf-8") as f:
                     code = f.read()
-                    functTrees[path] = ast.parse(code)
+                    functTrees[path] = [ast.parse(code), code]
 
-    for t in functTrees.values(): 
+    functions = []
+    for t,c in functTrees.values(): 
         for node in ast.walk(t):
             if isinstance(node, ast.FunctionDef):
-                print(node.name)
+                lines = c.splitlines()
+                functions.append([node.name, "\n".join(lines[node.lineno - 1: node.end_lineno])])
+        
+                
+    for n,c in functions:
+        print(f"**Name: {n}")
+        print(f"**Code:\n {c} \n")
 
 def explain_code(code, query):
 
