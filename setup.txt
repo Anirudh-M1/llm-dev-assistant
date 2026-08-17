@@ -1,2 +1,0 @@
-//Launch venv
-    source venv/bin/activate
