@@ -6,44 +6,55 @@ from sentence_transformers import SentenceTransformer
 import ollama
 import ast
 import numpy as np
+DEBUG = False
 
-def create_embeddings(code_files):
+# old embeddings by word match 
+# def create_embeddings(code_files):
 
-    documents = list(code_files.values())
-    vectorizer = TfidfVectorizer()
-    X = vectorizer.fit_transform(documents)
-    return vectorizer, X
+#     documents = list(code_files.values())
+#     vectorizer = TfidfVectorizer()
+#     X = vectorizer.fit_transform(documents)
+#     return vectorizer, X
 
 
-def build_faiss_index(X):
+def build_faiss_index(embeddings):
 
-    dense_vectors = X.toarray().astype("float32")
+    embeddings = embeddings.astype("float32")
 
-    dimension = dense_vectors.shape[1]
+    dimension = embeddings.shape[1]
 
     index = faiss.IndexFlatL2(dimension)
 
-    index.add(dense_vectors)
+    index.add(embeddings)
+    print(f"FAISS index contains {index.ntotal} vectors")
 
     return index
 
-def retrieve_code(query, vectorizer, index, code_files):
-    query_vec = vectorizer.transform([query]).toarray().astype("float32")
+def retrieve_functions(query, functions, index, model, k=3):
+    query_vec = model.encode([query]).astype("float32")
     
-    # Get top 3 files
-    distances, indices = index.search(query_vec, k=3)
+    distances, indices = index.search(query_vec, k)  # top k
+    retrieved = [functions[i] for i in indices[0]]  # get function info
     
-    file_names = list(code_files.keys())
+    return retrieved
+
+# def retrieve_code(query, vectorizer, index, code_files):
+#     query_vec = vectorizer.transform([query]).toarray().astype("float32")
     
-    # Combine the code from the top 3 files
-    combined_code = ""
-    retrieved_files = []
+#     # Get top 3 files
+#     distances, indices = index.search(query_vec, k=3)
     
-    for i in indices[0]:
-        combined_code += code_files[file_names[i]] + "\n\n"
-        retrieved_files.append(file_names[i])
+#     file_names = list(code_files.keys())
     
-    return retrieved_files, combined_code
+#     # Combine the code from the top 3 files
+#     combined_code = ""
+#     retrieved_files = []
+    
+#     for i in indices[0]:
+#         combined_code += code_files[file_names[i]] + "\n\n"
+#         retrieved_files.append(file_names[i])
+    
+#     return retrieved_files, combined_code
 
 
 def load_code_files(directory):
@@ -81,18 +92,18 @@ def load_code_functions(directory):
             if isinstance(node, ast.FunctionDef):
                 lines = c.splitlines()
                 functions.append([node.name, "\n".join(lines[node.lineno - 1: node.end_lineno])])
-        
-    for n,c in functions:
-        print(f"**Name: {n}")
-        print(f"**Code:\n {c} \n")
+    if DEBUG:     
+        for n,c in functions:
+            print(f"**Name: {n}")
+            print(f"**Code:\n {c} \n")
 
     return functions
 
-def create_embeddings(functions): 
-    model = SentenceTransformer("all-MiniLM-L6-v2")
+def create_embeddings(function, model): 
     funcCode = [c for _, c in functions]
     embeddings = model.encode(funcCode)
-    print(embeddings)
+    #print(embeddings)
+    return embeddings
 
 def explain_code(code, query):
 
@@ -135,10 +146,26 @@ def explain_code(code, query):
 
 
 if __name__ == "__main__":
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    
+    functions = load_code_functions("corpus")
 
-    funct = load_code_functions("corpus")
+    embeddings = create_embeddings(functions, model)
 
-    create_embeddings(funct)
+    index = build_faiss_index(embeddings)
+    
+    while True:
+        query = input("Ask about the codebase: ")
+        result = retrieve_functions(query, functions, index, model)
+        functions = {}
+        for n,c in result:
+            functions[n] = c
+
+        explanation = explain_code(functions, query)
+
+        print(explanation)
+
+
 
     # code_files = load_code_files("corpus")
 
