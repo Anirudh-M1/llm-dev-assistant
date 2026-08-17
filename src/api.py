@@ -41,6 +41,7 @@ class IngestResponse(BaseModel):
 class QueryRequest(BaseModel):
     query: str
     k: int = 3
+    include_explanation: bool = True
 
 
 class RetrievedChunk(BaseModel):
@@ -51,10 +52,10 @@ class RetrievedChunk(BaseModel):
 
 
 class QueryResponse(BaseModel):
-    explanation: str
+    explanation: str | None
     retrieved: list[RetrievedChunk]
     retrieval_ms: float
-    generation_ms: float
+    generation_ms: float | None
 
 
 @app.get("/health")
@@ -85,9 +86,12 @@ def query(repo_id: str, req: QueryRequest):
     retrieved = retrieve_chunks(req.query, repo["chunks"], repo["index"], k=req.k)
     retrieval_ms = (time.perf_counter() - retrieval_start) * 1000
 
-    generation_start = time.perf_counter()
-    explanation = explain_code(retrieved, req.query)
-    generation_ms = (time.perf_counter() - generation_start) * 1000
+    explanation = None
+    generation_ms = None
+    if req.include_explanation:
+        generation_start = time.perf_counter()
+        explanation = explain_code(retrieved, req.query)
+        generation_ms = (time.perf_counter() - generation_start) * 1000
 
     logger.info(json.dumps({
         "event": "query",
@@ -96,7 +100,7 @@ def query(repo_id: str, req: QueryRequest):
         "k": req.k,
         "chunk_count": len(retrieved),
         "retrieval_ms": round(retrieval_ms, 2),
-        "generation_ms": round(generation_ms, 2),
+        "generation_ms": round(generation_ms, 2) if generation_ms is not None else None,
     }))
 
     return QueryResponse(
@@ -111,5 +115,5 @@ def query(repo_id: str, req: QueryRequest):
             for c in retrieved
         ],
         retrieval_ms=round(retrieval_ms, 2),
-        generation_ms=round(generation_ms, 2),
+        generation_ms=round(generation_ms, 2) if generation_ms is not None else None,
     )

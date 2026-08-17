@@ -44,6 +44,32 @@ def test_ingest_and_query_roundtrip(tmp_path):
     assert body["generation_ms"] >= 0
 
 
+def test_query_without_explanation_skips_generation(tmp_path):
+    corpus_dir = tmp_path / "corpus2"
+    corpus_dir.mkdir()
+    (corpus_dir / "sample.py").write_text("def farewell():\n    return 'bye'\n")
+
+    async def fake_embed_texts_async(texts, concurrency=8):
+        return np.random.rand(len(texts), 8).astype("float32")
+
+    with patch("src.api.embed_texts_async", side_effect=fake_embed_texts_async):
+        client.post("/ingest/no-explain-repo", json={"directory": str(corpus_dir)})
+
+    ingested_chunks = store.get("no-explain-repo")["chunks"]
+    with patch("src.api.retrieve_chunks", return_value=ingested_chunks), \
+            patch("src.api.explain_code") as mock_explain:
+        resp = client.post(
+            "/query/no-explain-repo",
+            json={"query": "what does farewell do?", "k": 1, "include_explanation": False},
+        )
+
+    mock_explain.assert_not_called()
+    body = resp.json()
+    assert body["explanation"] is None
+    assert body["generation_ms"] is None
+    assert body["retrieval_ms"] >= 0
+
+
 def test_query_unknown_repo_returns_404():
     resp = client.post("/query/does-not-exist", json={"query": "hi"})
     assert resp.status_code == 404
