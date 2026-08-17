@@ -1,17 +1,19 @@
+import asyncio
+
 import ollama
-from sentence_transformers import SentenceTransformer
 
 from src.chunker import chunk_directory
+from src.embeddings import embed_text, embed_texts_async
 from src.index_store import build_faiss_index
 
 
-def create_embeddings(chunks, model):
+def create_embeddings(chunks):
     texts = [c.source for c in chunks]
-    return model.encode(texts)
+    return asyncio.run(embed_texts_async(texts))
 
 
-def retrieve_chunks(query, chunks, index, model, k=3):
-    query_vec = model.encode([query]).astype("float32")
+def retrieve_chunks(query, chunks, index, k=3):
+    query_vec = embed_text(query).reshape(1, -1)
     _distances, indices = index.search(query_vec, k)
     return [chunks[i] for i in indices[0]]
 
@@ -61,16 +63,14 @@ def explain_code(chunks, query):
 
 
 if __name__ == "__main__":
-    model = SentenceTransformer("all-MiniLM-L6-v2")
-
     chunks = chunk_directory("corpus")
 
-    embeddings = create_embeddings(chunks, model)
+    embeddings = create_embeddings(chunks)
 
     index = build_faiss_index(embeddings)
 
     while True:
         query = input("Ask about the codebase: ")
-        retrieved = retrieve_chunks(query, chunks, index, model)
+        retrieved = retrieve_chunks(query, chunks, index)
         explanation = explain_code(retrieved, query)
         print(explanation)
