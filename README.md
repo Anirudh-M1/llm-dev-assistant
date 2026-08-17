@@ -24,7 +24,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 ### Run
-python src/main.py
+python -m src.main
 
 ### Example query
 Ask about the codebase: How does factorial work?
