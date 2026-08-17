@@ -1,13 +1,36 @@
+# Byte-compiled / cache
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
 
-# Virtual environment
+# Virtual environments
 venv/
+.venv/
+env/
+ENV/
+
+# Environment variables
+.env
+
+# FAISS index artifacts / cached embeddings
+*.faiss
+*.index
+*.pkl
+*.npy
+*.npz
+embeddings_cache/
 
 # Mac
 .DS_Store
 
 # Logs
 *.log
+
+# Editors / IDE
+.vscode/
+.idea/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
