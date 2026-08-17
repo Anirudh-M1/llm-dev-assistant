@@ -98,7 +98,10 @@ def main():
         proc.wait(timeout=10)
 
     print()
-    print(f"Repos: {len(repo_ids)}  |  Rounds: {ROUNDS}  |  Concurrent queries/round: {len(repo_ids)}")
+    print(
+        f"Repos: {len(repo_ids)}  |  Rounds: {ROUNDS}  |  "
+        f"Concurrent queries/round: {len(repo_ids)}"
+    )
     print(f"Total samples: {len(retrieval_samples)}")
     print()
     print("Server-side retrieval latency (embed query + FAISS search), include_explanation=False:")

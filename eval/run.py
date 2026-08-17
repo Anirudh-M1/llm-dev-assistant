@@ -81,7 +81,9 @@ def percentile(data, pct):
     return data[f] + (data[c] - data[f]) * (k - f)
 
 
-def write_results(commit_sha, date, corpus_size, question_count, metrics, retrieval_ms, generation_ms):
+def write_results(
+    commit_sha, date, corpus_size, question_count, metrics, retrieval_ms, generation_ms
+):
     lines = [
         "# Evaluation results",
         "",
@@ -117,8 +119,14 @@ def write_results(commit_sha, date, corpus_size, question_count, metrics, retrie
         "",
         "| Stage | p50 | p95 |",
         "|---|---|---|",
-        f"| Retrieval | {percentile(retrieval_ms, 50):.1f}ms | {percentile(retrieval_ms, 95):.1f}ms |",
-        f"| Generation | {percentile(generation_ms, 50):.1f}ms | {percentile(generation_ms, 95):.1f}ms |",
+        (
+            f"| Retrieval | {percentile(retrieval_ms, 50):.1f}ms | "
+            f"{percentile(retrieval_ms, 95):.1f}ms |"
+        ),
+        (
+            f"| Generation | {percentile(generation_ms, 50):.1f}ms | "
+            f"{percentile(generation_ms, 95):.1f}ms |"
+        ),
         "",
     ]
 
@@ -146,7 +154,9 @@ def main():
     print("Measuring latency (retrieval + generation per question)...")
     retrieval_ms, generation_ms = measure_latency(questions, chunks, index)
 
-    write_results(commit_sha, date, len(chunks), len(questions), metrics, retrieval_ms, generation_ms)
+    write_results(
+        commit_sha, date, len(chunks), len(questions), metrics, retrieval_ms, generation_ms
+    )
     print(f"Results written to {RESULTS_PATH}")
 
 
