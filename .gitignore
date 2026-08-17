@@ -20,6 +20,9 @@ ENV/
 *.npz
 embeddings_cache/
 
+# Generated benchmark fixture corpus (regenerate with benchmark/generate_corpus.py)
+benchmark/corpus/
+
 # Mac
 .DS_Store
 
